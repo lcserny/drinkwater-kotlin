@@ -1,11 +1,9 @@
 package net.cserny.tools
 
 import java.awt.*
-import java.awt.event.ActionListener
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.schedule
 import kotlin.system.exitProcess
 
@@ -15,8 +13,8 @@ fun main() {
     val trayIcon = TrayIcon(icon, "Drink More Water")
     val drinkWater = TrayDrinkWater(trayIcon)
     drinkWater.init()
-    SystemTray.getSystemTray().add(trayIcon)
     drinkWater.start(10000, 3600000)
+    SystemTray.getSystemTray().add(trayIcon)
 }
 
 interface DrinkWater {
@@ -28,14 +26,13 @@ interface DrinkWater {
     fun triggerNotification()
 }
 
-class TrayDrinkWater(private val trayIcon: TrayIcon) : DrinkWater {
-
-    private val popupMenu = PopupMenu()
-    private val exitMenuItem = MenuItem("Exit")
-    private val pauseMenuItem = CheckboxMenuItem("Pause")
-
-    private var muted = false
-    private var lastTriggerDate = LocalDateTime.now()
+class TrayDrinkWater(private val trayIcon: TrayIcon,
+                     private val popupMenu: PopupMenu = PopupMenu(),
+                     private val exitMenuItem: MenuItem = MenuItem("Exit"),
+                     private val pauseMenuItem: CheckboxMenuItem = CheckboxMenuItem("Pause"),
+                     private var muted: Boolean = false,
+                     private var lastTriggerDate: LocalDateTime = LocalDateTime.now()
+) : DrinkWater {
 
     override fun init() {
         trayIcon.isImageAutoSize = true
