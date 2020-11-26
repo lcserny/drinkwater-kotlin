@@ -12,32 +12,34 @@ fun main() {
     val icon = Toolkit.getDefaultToolkit().getImage(resource)
     val trayIcon = TrayIcon(icon, "Drink More Water")
     val drinkWater = TrayDrinkWater(trayIcon)
-    drinkWater.init()
     drinkWater.start(10000, 3600000)
     SystemTray.getSystemTray().add(trayIcon)
 }
 
-interface DrinkWater {
-    fun init()
-    fun start(iterateMs: Long, triggerMs: Long)
-    fun exit()
-    fun toggleMute()
-    fun isNotMuted(): Boolean
-    fun triggerNotification()
-}
+class TrayDrinkWater(
+    private val trayIcon: TrayIcon,
+    private val popupMenu: PopupMenu = PopupMenu(),
+    private val exitMenuItem: MenuItem = MenuItem("Exit"),
+    private val pauseMenuItem: CheckboxMenuItem = CheckboxMenuItem("Pause"),
+    private var muted: Boolean = false,
+    private var lastTriggerDate: LocalDateTime = LocalDateTime.now()
+) {
 
-class TrayDrinkWater(private val trayIcon: TrayIcon,
-                     private val popupMenu: PopupMenu = PopupMenu(),
-                     private val exitMenuItem: MenuItem = MenuItem("Exit"),
-                     private val pauseMenuItem: CheckboxMenuItem = CheckboxMenuItem("Pause"),
-                     private var muted: Boolean = false,
-                     private var lastTriggerDate: LocalDateTime = LocalDateTime.now()
-) : DrinkWater {
+    fun start(iterateMs: Long, triggerMs: Long) {
+        init()
+        Timer().schedule(0, iterateMs) {
+            val currentDate = LocalDateTime.now()
+            if (ChronoUnit.MILLIS.between(lastTriggerDate, currentDate) >= triggerMs && !muted) {
+                lastTriggerDate = currentDate
+                triggerNotification()
+            }
+        }
+    }
 
-    override fun init() {
+    private fun init() {
         trayIcon.isImageAutoSize = true
 
-        exitMenuItem.addActionListener { exit() }
+        exitMenuItem.addActionListener { exitProcess(0) }
         pauseMenuItem.addItemListener { toggleMute() }
 
         popupMenu.add(exitMenuItem)
@@ -46,29 +48,15 @@ class TrayDrinkWater(private val trayIcon: TrayIcon,
         trayIcon.popupMenu = popupMenu
     }
 
-    override fun start(iterateMs: Long, triggerMs: Long) {
-        Timer().schedule(0, iterateMs) {
-            val currentDate = LocalDateTime.now()
-            if (ChronoUnit.MILLIS.between(lastTriggerDate, currentDate) >= triggerMs && isNotMuted()) {
-                lastTriggerDate = currentDate
-                triggerNotification()
-            }
-        }
-    }
-
-    override fun exit() {
-        exitProcess(0)
-    }
-
-    override fun toggleMute() {
+    private fun toggleMute() {
         muted = !muted
         pauseMenuItem.state = muted
     }
 
-    override fun isNotMuted(): Boolean = !muted
-
-    override fun triggerNotification() {
-        trayIcon.displayMessage("Drink Water Notification",
-                "An hour has passed, you need to drink some water!", TrayIcon.MessageType.INFO)
+    private fun triggerNotification() {
+        trayIcon.displayMessage(
+            "Drink Water Notification",
+            "An hour has passed, you need to drink some water!", TrayIcon.MessageType.INFO
+        )
     }
 }
