@@ -8,7 +8,7 @@ import kotlin.concurrent.schedule
 import kotlin.system.exitProcess
 
 fun main() {
-    val resource = Thread.currentThread().contextClassLoader.getResource("glass.png")
+    val resource = Thread.currentThread().contextClassLoader.getResource("water_small.png")
     val icon = Toolkit.getDefaultToolkit().getImage(resource)
     val trayIcon = TrayIcon(icon, "Drink More Water")
     val drinkWater = TrayDrinkWater(trayIcon)
